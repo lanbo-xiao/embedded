@@ -2,6 +2,7 @@ import os
 import pygame
 import random
 import sys
+import pygame.mixer
 
 
 class Gold_Game:
@@ -12,13 +13,17 @@ class Gold_Game:
         pygame.display.set_caption('Dig!Dig!')
         self.drawback()
 
+        pygame.mixer.init()
+        pygame.mixer.music.load('music/background_music.mp3')
+        pygame.mixer.music.play(-1)
+
         self.levelnum = level_num if level_num in [1, 2, 3, 4, 5] else 1
         self.scorenum = 0
         self.highscore = self.get_high_score()
         self.ileft = 1
         self.iright = 10
         self.x = 100
-        self.y = 450
+        self.y = 480
         self.filename = 'image\\1.png'
         self.backimg_ren = self.rect(self.filename, [self.x, self.y])
         self.bakscreen.blit(self.backimg_ren.image, self.backimg_ren.rect)
@@ -38,7 +43,7 @@ class Gold_Game:
         return highscore
 
     def drawback(self):
-        my_back = pygame.image.load('image\\qi3.jpg')
+        my_back = pygame.image.load('image\\background.png')
         self.bakscreen.blit(my_back, [0, 0])
 
     def load_text(self):
@@ -110,13 +115,14 @@ class Gold_Game:
             self.ileft = 0
         self.ileft += 1
         self.filename = f'image\\{self.ileft}.png'
-        if self.x > 560:
-            self.x = 560
+        if self.x > 730:
+            self.x = 730
         else:
             self.x += 10
 
         self.backimg_ren = self.rect(self.filename, [self.x, self.y])
         self.bakscreen.blit(self.backimg_ren.image, self.backimg_ren.rect)
+
 
     def update_game(self):
         if self.scorenum > 0 and self.scorenum / 50.0 == int(self.scorenum / 50.0):
