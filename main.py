@@ -13,7 +13,7 @@ class Loading(QWidget):
         super(Loading, self).__init__()
 
         # 载入动画的背景图
-        self.m_bk = QPixmap("image/loading2.jpg")
+        self.m_bk = QPixmap("image/loading_back.png")
 
         # 设置窗口的大小
         self.setFixedSize(self.m_bk.size())
@@ -68,7 +68,7 @@ class Loading(QWidget):
 
         # 进度条后画，原因在于要浮于斗地主图片上方
         painter.drawPixmap(self.rect(), self.m_bk)
-        painter.drawPixmap(38, 127, self.m_progress.width(), self.m_progress.height(), self.m_progress)
+        painter.drawPixmap(54, 130, self.m_progress.width(), self.m_progress.height(), self.m_progress)
 
 class MainWindow(QWidget):
     def __init__(self):

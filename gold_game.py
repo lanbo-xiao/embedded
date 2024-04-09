@@ -4,9 +4,34 @@ import random
 import sys
 import pygame.mixer
 
+random.seed(1234)
+
+
+class Bomb_rect(pygame.sprite.Sprite):  # 绘出炸弹
+    def __init__(self, Bomb_position, speed):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load('image\\bomb.png')
+        self.rect = self.image.get_rect()
+        self.rect.topleft = Bomb_position
+        self.speed = speed
+
+    def move(self):
+        self.rect = self.rect.move(self.speed)
+
+class Gold_rect(pygame.sprite.Sprite):  # 绘出金币
+    def __init__(self, gold_position, speed):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load('image\\gold.png')
+        self.rect = self.image.get_rect()
+        self.rect.topleft = gold_position
+        self.speed = speed
+
+    def move(self):
+        self.rect = self.rect.move(self.speed)
+
 
 class Gold_Game:
-    def __init__(self, level_num = 1):
+    def __init__(self, level_num=2):
         pygame.init()
         self.bakscreen = pygame.display.set_mode([800, 600])
         self.bakscreen.fill([0, 160, 233])
@@ -28,15 +53,22 @@ class Gold_Game:
         self.backimg_ren = self.rect(self.filename, [self.x, self.y])
         self.bakscreen.blit(self.backimg_ren.image, self.backimg_ren.rect)
         self.load_text()
-        self.goldx = random.randint(50, 580)
         self.speed = [0, self.levelnum]
-        self.mygold = self.gold_rect([self.goldx, 100], self.speed)
+
+        ######
+        self.all_items = []
+        self.mygold = Gold_rect([random.randint(50, 580), 100], self.speed)
+        self.all_items.append(self.mygold)
+        self.mybomb = Bomb_rect([random.randint(50, 580), 100], self.speed)
+        self.all_items.append(self.mybomb)
+        ######
+
         pygame.display.update()
 
     def get_high_score(self):
         if os.path.isfile('highscore'):
             highfile = open('highscore', 'r')
-            highscore = highfile.readline()
+            highscore = int(highfile.readline())
             highfile.close()
         else:
             highscore = 0
@@ -58,22 +90,11 @@ class Gold_Game:
         text_screen = my_font.render(scorestr, True, (255, 0, 0))
         self.bakscreen.blit(text_screen, (650, 110))
 
-    class rect():  # 画出小人
+    class rect():
         def __init__(self, filename, initial_position):
             self.image = pygame.image.load(filename)
             self.rect = self.image.get_rect()
             self.rect.topleft = initial_position
-
-    class gold_rect(pygame.sprite.Sprite):  # 绘出金币
-        def __init__(self, gold_position, speed):
-            pygame.sprite.Sprite.__init__(self)
-            self.image = pygame.image.load('image\\gold.png')
-            self.rect = self.image.get_rect()
-            self.rect.topleft = gold_position
-            self.speed = speed
-
-        def move(self):
-            self.rect = self.rect.move(self.speed)
 
     def load_game_over(self):
         my_font = pygame.font.SysFont(None, 50)
@@ -90,6 +111,40 @@ class Gold_Game:
             highfile = open('highscore', 'w')
             highfile.writelines(str(self.scorenum))
             highfile.close()
+
+    def update_game(self):
+        self.drawback()
+        self.load_text()
+
+        for item in self.all_items:
+            item.move()
+            self.bakscreen.blit(item.image, item.rect)
+
+        self.backimg_ren = self.rect(self.filename, [self.x, self.y])
+        self.bakscreen.blit(self.backimg_ren.image, self.backimg_ren.rect)
+
+        for item in self.all_items:
+            if item.rect.colliderect(self.backimg_ren.rect):
+                self.all_items.remove(item)
+                if(isinstance(item,Gold_rect)):
+                    self.scorenum += 5
+                    if self.scorenum > 0 and self.scorenum % 25 == 0:
+                        self.levelnum = self.levelnum + 1
+                        self.speed = [0, self.levelnum]
+                    self.load_text()
+                    self.mygold = Gold_rect([random.randint(50, 580), 100], self.speed)
+                    self.all_items.append(self.mygold)
+                if (isinstance(item, Bomb_rect)):
+                    self.load_game_over()
+
+        pygame.display.update()
+
+    def handle_input(self):
+        pressed_keys = pygame.key.get_pressed()
+        if pressed_keys[pygame.K_LEFT]:
+            self.move_left()
+        elif pressed_keys[pygame.K_RIGHT]:
+            self.move_right()
 
     def move_left(self):
         self.drawback()
@@ -122,37 +177,6 @@ class Gold_Game:
 
         self.backimg_ren = self.rect(self.filename, [self.x, self.y])
         self.bakscreen.blit(self.backimg_ren.image, self.backimg_ren.rect)
-
-
-    def update_game(self):
-        if self.scorenum > 0 and self.scorenum / 50.0 == int(self.scorenum / 50.0):
-            self.levelnum = self.scorenum / 50 + self.levelnum
-            self.speed = [0, self.levelnum]
-
-        self.drawback()
-        self.load_text()
-        self.mygold.move()
-        self.bakscreen.blit(self.mygold.image, self.mygold.rect)
-
-        self.backimg_ren = self.rect(self.filename, [self.x, self.y])
-        self.bakscreen.blit(self.backimg_ren.image, self.backimg_ren.rect)
-
-        if self.mygold.rect.top > 600:
-            self.load_game_over()
-        if self.mygold.rect.colliderect(self.backimg_ren.rect):
-            self.scorenum += 5
-            self.load_text()
-            self.goldx = random.randint(50, 580)
-            self.mygold = self.gold_rect([self.goldx, 100], self.speed)
-
-        pygame.display.update()
-
-    def handle_input(self):
-        pressed_keys = pygame.key.get_pressed()
-        if pressed_keys[pygame.K_LEFT]:
-            self.move_left()
-        elif pressed_keys[pygame.K_RIGHT]:
-            self.move_right()
 
     def start(self):
         while True:
