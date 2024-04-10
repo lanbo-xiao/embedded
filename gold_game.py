@@ -18,6 +18,7 @@ class Bomb_rect(pygame.sprite.Sprite):  # 绘出炸弹
     def move(self):
         self.rect = self.rect.move(self.speed)
 
+
 class Gold_rect(pygame.sprite.Sprite):  # 绘出金币
     def __init__(self, gold_position, speed):
         pygame.sprite.Sprite.__init__(self)
@@ -62,6 +63,7 @@ class Gold_Game:
         self.mybomb = Bomb_rect([random.randint(50, 580), 100], self.speed)
         self.all_items.append(self.mybomb)
         ######
+        self.game_over = False
 
         pygame.display.update()
 
@@ -111,6 +113,8 @@ class Gold_Game:
             highfile = open('highscore', 'w')
             highfile.writelines(str(self.scorenum))
             highfile.close()
+        self.all_items.clear()
+        pygame.display.update()
 
     def update_game(self):
         self.drawback()
@@ -118,6 +122,12 @@ class Gold_Game:
 
         for item in self.all_items:
             item.move()
+            if item.rect.top > 600:
+                self.all_items.remove(item)
+                if (random.randint(0, 1) == 0):
+                    self.all_items.append(Gold_rect([random.randint(50, 580), 100], self.speed))
+                else:
+                    self.all_items.append(Bomb_rect([random.randint(50, 580), 100], self.speed))
             self.bakscreen.blit(item.image, item.rect)
 
         self.backimg_ren = self.rect(self.filename, [self.x, self.y])
@@ -126,18 +136,21 @@ class Gold_Game:
         for item in self.all_items:
             if item.rect.colliderect(self.backimg_ren.rect):
                 self.all_items.remove(item)
-                if(isinstance(item,Gold_rect)):
+                if (isinstance(item, Gold_rect)):
                     self.scorenum += 5
                     if self.scorenum > 0 and self.scorenum % 25 == 0:
                         self.levelnum = self.levelnum + 1
                         self.speed = [0, self.levelnum]
                     self.load_text()
-                    self.mygold = Gold_rect([random.randint(50, 580), 100], self.speed)
-                    self.all_items.append(self.mygold)
+                    if (random.randint(0, 1) == 0):
+                        self.all_items.append(Gold_rect([random.randint(50, 580), 100], self.speed))
+                    else:
+                        self.all_items.append(Bomb_rect([random.randint(50, 580), 100], self.speed))
                 if (isinstance(item, Bomb_rect)):
                     self.load_game_over()
 
-        pygame.display.update()
+        if len(self.all_items) != 0:
+            pygame.display.update()
 
     def handle_input(self):
         pressed_keys = pygame.key.get_pressed()
@@ -179,10 +192,14 @@ class Gold_Game:
         self.bakscreen.blit(self.backimg_ren.image, self.backimg_ren.rect)
 
     def start(self):
-        while True:
+        while not self.game_over:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    sys.exit()
-
+                    self.game_over = True
+                    break
             self.handle_input()
             self.update_game()
+
+        # 游戏结束后,关闭 Pygame 窗口
+        pygame.quit()
+        return self.scorenum
