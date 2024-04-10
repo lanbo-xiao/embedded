@@ -144,11 +144,14 @@ class Loading(QWidget):
         with open("a.txt", 'r') as f:
             self.name = f.readline()
             dialog = QDialog(self)
-            dialog.setWindowTitle("登陆成功,欢迎您" + self.name)
+            dialog.setWindowTitle("登陆成功!")
             dialog.setGeometry((screen_width - 640) // 2, (screen_height - 400) // 2, 640, 400)
             # 创建对话框的布局并添加控件
             layout = QVBoxLayout()
-            label = QLabel("登陆成功，欢迎您," + self.name)
+
+            label = QLabel("hello~ " + self.name)
+            label.setAlignment(Qt.AlignCenter)
+            label.setStyleSheet("font-family: Arial; font-size: 24px;")
 
             label_image = QLabel()
             face_image = QPixmap("image/xiaobao.jpg")
@@ -157,6 +160,8 @@ class Loading(QWidget):
             # label_image.setScaledContents(True)
             # 按钮
             close_button = QPushButton("确认")
+            close_button.setStyleSheet(
+                "background-color: #6495ED; color: white; font-size: 14px;")  # 设置按钮的背景颜色、文字颜色和字体大小
             close_button.clicked.connect(dialog.close)
             close_button.clicked.connect(self.start_game)
 

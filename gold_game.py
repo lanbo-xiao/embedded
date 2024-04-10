@@ -137,6 +137,9 @@ class Gold_Game:
             if item.rect.colliderect(self.backimg_ren.rect):
                 self.all_items.remove(item)
                 if (isinstance(item, Gold_rect)):
+                    gold_music = pygame.mixer.Sound("music/gold.ogg")
+                    gold_music.play()
+
                     self.scorenum += 5
                     if self.scorenum > 0 and self.scorenum % 25 == 0:
                         self.levelnum = self.levelnum + 1
@@ -147,6 +150,9 @@ class Gold_Game:
                     else:
                         self.all_items.append(Bomb_rect([random.randint(50, 580), 100], self.speed))
                 if (isinstance(item, Bomb_rect)):
+                    bomb_music = pygame.mixer.Sound("music/bomb.mp3")
+                    bomb_music.play()
+
                     self.load_game_over()
 
         if len(self.all_items) != 0:
