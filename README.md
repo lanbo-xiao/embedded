@@ -7,5 +7,5 @@ project-zju-2023-2024
 直接运行main.py文件  
 二、与RK3399ProD互联  
 1、取消client相关的注释（共有两处）  
-2、先在板子上运行开启服务器  
+2、先在板子上运行开启服务器（运行final.py）
 3、运行main.py  
