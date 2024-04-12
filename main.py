@@ -6,6 +6,11 @@ from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout,
                              QTableWidgetItem)
 from PyQt5.QtGui import QPixmap, QIcon, QPainter
 from gold_game import Gold_Game
+import socket
+import cv2
+import numpy as np
+import threading
+import time
 
 
 # 绘制排行榜
@@ -110,7 +115,9 @@ class Loading(QWidget):
 
         # 排行榜
         self.ranking = LeaderboardWindow()
+        self.score = None
         self.name = None
+        self.diction = {"ywx": "于*秀", "wjb": "王*宝", "visitor": "访客"}
 
     def update_progress(self):
 
@@ -141,7 +148,7 @@ class Loading(QWidget):
 
     def log_in_success(self):
         # sys.exit()
-        with open("a.txt", 'r') as f:
+        with open("name.txt", 'r') as f:
             self.name = f.readline()
             dialog = QDialog(self)
             dialog.setWindowTitle("登陆成功!")
@@ -149,12 +156,12 @@ class Loading(QWidget):
             # 创建对话框的布局并添加控件
             layout = QVBoxLayout()
 
-            label = QLabel("hello~ " + self.name)
+            label = QLabel("hello~ " + self.diction[self.name])
             label.setAlignment(Qt.AlignCenter)
             label.setStyleSheet("font-family: Arial; font-size: 24px;")
 
             label_image = QLabel()
-            face_image = QPixmap("image/xiaobao.jpg")
+            face_image = QPixmap("received_img.jpg")
             face_image = face_image.scaled(640, 360)
             label_image.setPixmap(face_image)
             # label_image.setScaledContents(True)
@@ -175,14 +182,41 @@ class Loading(QWidget):
     def start_game(self):
         # 开始金币游戏
         self.hide()
-        gold_game = Gold_Game()
-        score = gold_game.start()
 
-        self.ranking.add_player("lala", score)
-        self.ranking.show()
-        self.ranking.write_to_txt()
+        def writer():
+            # new_client = socket.socket()
+            # new_client.connect(("192.168.173.201", 5555))
+            # while True:  # 开始游戏按下后调用---重新连接服务器
+            #     data = new_client.recv(1024)
+            #     try:
+            #         if data.decode() == 'R' or data.decode() == 'L' or data.decode() == 'S':
+            #             with open("move.txt", "a+") as f:
+            #                 f.write(data.decode() + "\n")
+            #                 f.flush()
+            #     except FileNotFoundError:
+            #         print("打开失败")
+            #     if not reader_thread.is_alive():
+            #         break
+            pass
+
+        def reader():
+            gold_game = Gold_Game()
+            self.score = gold_game.start()
+
+        writer_thread = threading.Thread(target=writer)
+        reader_thread = threading.Thread(target=reader)
+
+        writer_thread.start()
+        reader_thread.start()
+
+        writer_thread.join()
+        reader_thread.join()
         # 因为要产生新窗口了，所以这个loading窗口需要关闭
         # self.close()
+
+        self.ranking.add_player(self.name, self.score)
+        self.ranking.show()
+        self.ranking.write_to_txt()
 
 
 class MainWindow(QWidget):
@@ -193,11 +227,6 @@ class MainWindow(QWidget):
 
         # 创建所有部件
         # 文本输入框
-        self.input_text = QLineEdit()
-        self.input_text.setPlaceholderText("在这里输入游戏难度（数字）")
-        # 创建按钮
-        self.button1 = QPushButton("登录")
-        self.button2 = QPushButton("开始游戏")
         self.button3 = QPushButton()
         self.button3.setFixedSize(600, 600)
         # self.button3.setMinimumSize(200, 200)
@@ -208,9 +237,6 @@ class MainWindow(QWidget):
         self.button3.setIcon(QIcon(self.button3_pixmap))
         self.button3.setIconSize(self.button3.size())
 
-        # 创建标签
-        self.label = QLabel("This is a label")
-
         # 创建过场动画
         self.load = Loading()
 
@@ -219,7 +245,6 @@ class MainWindow(QWidget):
 
     def button_connect(self):
         # 注册按钮回调
-        self.button2.clicked.connect(self.start_pygame)
         self.button3.clicked.connect(self.start_pygame)
 
     def display_layout(self):
@@ -235,14 +260,46 @@ class MainWindow(QWidget):
         self.load.show()
         # 启动定时器（每15ms发一次信号）
         self.load.timer.start(15)
-        # if self.input_text.text() in ['1', '2', '3', '4', '5']:
-        #     gold_game = Gold_Game(int(self.input_text.text()))
-        # else:
-        #     gold_game = Gold_Game()
-        # gold_game.start()
+        # 连接远程的板子
+        # client = socket.socket()
+        # client.connect(("192.168.173.201", 5555))
+        # while True:
+        #     data = client.recv(1024)
+        #     if data:
+        #         # 通知服务器已收到标志数据，可以发送图像数据
+        #         client.send(b"ok")
+        #         flag = data.decode().split(",")
+        #         total = int(flag[0])  # 图像字节流数据的总长度
+        #         name = flag[1]  # 识别结果
+        #
+        #         f = open("name.txt", "w+")
+        #         f.write(name)
+        #         f.close()
+        #
+        #         cnt = 0  # 接收到的数据计数
+        #         img_bytes = b""  # 存放接收到的数据
+        #         while cnt < total:
+        #             data = client.recv(25600)
+        #             img_bytes += data
+        #             cnt += len(data)
+        #             print("receive:" + str(cnt) + "/" + flag[0])
+        #         # 通知服务器图像接收完毕
+        #         client.send(b"ok")
+        #         # 解析接收到的字节流数据，并本地保存图片
+        #         img = np.asarray(bytearray(img_bytes), dtype="uint8")
+        #         img = cv2.imdecode(img, cv2.IMREAD_COLOR)
+        #         cv2.imwrite("received_img.jpg", img)
+        #         # cv2.imshow("img", img)
+        #         cv2.waitKey(1)
+        #         print("已断开！")
+        #         break
+        # client.close()  # 人脸识别后连接中断
+
 
 
 if __name__ == "__main__":
+    f = open("move.txt", "w")
+    f.close()
     app = QApplication(sys.argv)
     # 获得屏幕的分辨率大小
     desk = QApplication.desktop()
@@ -250,22 +307,6 @@ if __name__ == "__main__":
     screen_height = desk.height()
     window = MainWindow()
     window.show()
+
     sys.exit(app.exec_())
 
-# # 添加控件到布局
-# main_layout.addWidget(self.input_text)
-#
-# # 按钮相关
-# button_layout = QHBoxLayout()
-# button_layout.addWidget(self.button1)
-# button_layout.addWidget(self.button2)
-# main_layout.addLayout(button_layout)
-#
-# # 创建一个新的水平布局来放置 button3
-# button3_layout = QHBoxLayout()
-# button3_layout.addStretch()
-# button3_layout.addWidget(self.button3)
-# button3_layout.addStretch()
-# main_layout.addLayout(button3_layout)
-#
-# main_layout.addWidget(self.label)

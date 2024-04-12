@@ -36,7 +36,7 @@ class Gold_Game:
         pygame.init()
         self.bakscreen = pygame.display.set_mode([800, 600])
         self.bakscreen.fill([0, 160, 233])
-        pygame.display.set_caption('Dig!Dig!')
+        pygame.display.set_caption('哈皮吃！吃！吃！')
         self.drawback()
 
         pygame.mixer.init()
@@ -64,6 +64,9 @@ class Gold_Game:
         self.all_items.append(self.mybomb)
         ######
         self.game_over = False
+
+        # 每次读的位置
+        self.index = 0
 
         pygame.display.update()
 
@@ -159,6 +162,17 @@ class Gold_Game:
             pygame.display.update()
 
     def handle_input(self):
+        with open("move.txt", "r") as f:
+            lines = f.readlines()
+            if self.index < len(lines) - 5:
+                move = lines[self.index].strip()[0]
+                self.index += 1
+                if move == 'L':
+                    self.move_left()
+                elif move == 'R':
+                    self.move_right()
+            f.close()
+
         pressed_keys = pygame.key.get_pressed()
         if pressed_keys[pygame.K_LEFT]:
             self.move_left()
